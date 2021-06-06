@@ -18,28 +18,28 @@ public class SpreadSheetController {
 	
 	Properties properties = new Properties();
 	
-	private void loadPropertiesFile() throws IOException {
+	private void loadPropertiesFile()  {
 		InputStream inputStream = null;
 		final String propFileName = "config.properties";
 		
 		try {			
 			inputStream = getClass().getClassLoader().getResourceAsStream(propFileName);
 			properties.load(inputStream);
-
+			
 		}catch(Exception e) {
 			System.out.println(e);
 		}
 		finally {
-			inputStream.close();
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
-	public List<String> consistSpreadSheet(String spreadSheetPath){
-		try {
-			loadPropertiesFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public List<String> consistSpreadSheet(String spreadSheetPath) {
+		loadPropertiesFile();
 		
 		List<String> messagesReturnList = new ArrayList<String>();
 		File spreadSheetLocal = new File(spreadSheetPath);
@@ -68,8 +68,7 @@ public class SpreadSheetController {
 		if(!messagesReturnList.isEmpty()) {
 			return messagesReturnList;
 		}else {
-			File spreadSheetFile = new File(spreadSheetPath);
-			spreadSheetService.readSpreadSheet(spreadSheetFile);
+			spreadSheetService.readSpreadSheet(spreadSheetLocal);
 			return messagesReturnList;
 		}
 	}

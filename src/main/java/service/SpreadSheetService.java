@@ -1,36 +1,48 @@
 package service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Iterator;
 
-import org.jopendocument.dom.spreadsheet.Sheet;
-import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SpreadSheetService {
 
-	public void readSpreadSheet(File spreadSheetPath) {
-		Sheet spreadSheet;
-		try {
-			spreadSheet = SpreadSheet.createFromFile(spreadSheetPath).getSheet(0);
-			
-			
-			Integer colCount = spreadSheet.getColumnCount();
-			Integer rowCount = spreadSheet.getRowCount();
+	public void readSpreadSheet(File spreadSheetFile) {
 		
-			System.out.println(colCount);
-			System.out.println(rowCount);
+		try {
+			FileInputStream file = new FileInputStream(spreadSheetFile);
 			
-			spreadSheet.getCellAt("B5").setValue("Teste");
-//			
-//			for(int rowIndex = 1; rowIndex < rowCount; rowIndex ++) {
-//				for(int colIndex = 1; colIndex < colCount; colIndex ++) {
-//					if(spreadSheet.getCellAt(colIndex, rowIndex).getTextValue() != null) {
-//						System.out.println(spreadSheet.getCellAt(colIndex, rowIndex).getTextValue());
-//					}
-//					
-//				}
-//			}
-
+			XSSFWorkbook workbook = new XSSFWorkbook (file);
+			XSSFSheet genericSheet = workbook.getSheetAt(0);
+			
+			Iterator<Row> rowIterator = genericSheet.iterator();
+			
+			while(rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				
+				Iterator<Cell> cellIterator = row.cellIterator();
+				
+				while(cellIterator.hasNext()) {
+					Cell cell = cellIterator.next();
+				
+					if(cell.getCellType() == 0) {
+						System.out.println(cell.getNumericCellValue());
+					}
+					if(cell.getCellType() == 1) {
+						System.out.println(cell.getStringCellValue());
+					}
+				}
+			}
+			file.close();		
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
