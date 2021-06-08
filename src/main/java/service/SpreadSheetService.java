@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -13,31 +15,39 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SpreadSheetService {
 
+	FileInputStream file;
+	
+	XSSFWorkbook workbook;
+	XSSFSheet genericSheet;
+	
+	List<String> fieldNames = new ArrayList<String>();
+	
+	Integer headerLine;
+	
 	public void readSpreadSheet(File spreadSheetFile) {
-		
+		readHeaders(spreadSheetFile);
+		mapDataTypes(genericSheet);
+	}
+	
+	public void readHeaders(File spreadSheetFile) {
 		try {
-			FileInputStream file = new FileInputStream(spreadSheetFile);
+			file = new FileInputStream(spreadSheetFile);
+			workbook = new XSSFWorkbook(file);
+			genericSheet  = workbook.getSheetAt(0);
 			
-			XSSFWorkbook workbook = new XSSFWorkbook (file);
-			XSSFSheet genericSheet = workbook.getSheetAt(0);
+			headerLine = genericSheet.getFirstRowNum();
 			
-			Iterator<Row> rowIterator = genericSheet.iterator();
+			Row row = genericSheet.getRow(headerLine);
+			Iterator<Cell> cellIterator = row.cellIterator();
 			
-			while(rowIterator.hasNext()) {
-				Row row = rowIterator.next();
+			Integer i = 0;
+			
+			while(cellIterator.hasNext()) {	
+				Cell cell = cellIterator.next();
+				String dataType = "";
 				
-				Iterator<Cell> cellIterator = row.cellIterator();
-				
-				while(cellIterator.hasNext()) {
-					Cell cell = cellIterator.next();
-				
-					if(cell.getCellType() == 0) {
-						System.out.println(cell.getNumericCellValue());
-					}
-					if(cell.getCellType() == 1) {
-						System.out.println(cell.getStringCellValue());
-					}
-				}
+				fieldNames.add(i, cell.getCellType() == 1 ? cell.getStringCellValue() : Double.toString(cell.getNumericCellValue()));
+				i++;
 			}
 			file.close();		
 			
@@ -45,6 +55,24 @@ public class SpreadSheetService {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}	
+	
+	public void mapDataTypes(XSSFSheet spreadSheet) {
+		
+		//Remove header line
+		spreadSheet.removeRow(spreadSheet.getRow(headerLine));
+		
+		Iterator<Row> rowIterator = spreadSheet.iterator();
+		String defaultDataType = "NUMERIC";
+		
+		while(rowIterator.hasNext()) {
+			Row row = rowIterator.next();
+			Cell cell = row.getCell(0);
+			
+			if(cell.getCellType() == 1)
+				defaultDataType = "VARCHAR";
+			
 		}
 	}
 }
